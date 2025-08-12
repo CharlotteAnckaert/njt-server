@@ -7,6 +7,8 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 app.use(bodyParser.json({ limit: '5mb' }));
+app.get('/', (req, res) => res.status(200).send('ok'));
+app.get('/healthz', (req, res) => res.status(200).send('ok'));
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
