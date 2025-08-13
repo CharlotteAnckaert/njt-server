@@ -63,7 +63,20 @@ app.post('/save', (req, res) => {
 });
 app.get('/files', (req, res) => {
   const files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.csv'));
-  res.json(files);
+
+  let links = files.map(file => {
+    return `<li><a href="/files/${encodeURIComponent(file)}">${file}</a></li>`;
+  }).join('');
+
+  res.send(`
+    <html>
+      <head><title>Available Files</title></head>
+      <body>
+        <h2>Available Files</h2>
+        <ul>${links}</ul>
+      </body>
+    </html>
+  `);
 });
 
 app.get('/files/:name', (req, res) => {
