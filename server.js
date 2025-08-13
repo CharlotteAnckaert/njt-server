@@ -61,13 +61,20 @@ app.post('/save', (req, res) => {
 
   res.send('Saved');
 });
-app.get('/files', (req, res) => {
+
+// Require API key for file listing/downloading
+function requireApiKey(req, res, next) {
+  if (!API_KEY) return res.status(500).send('Server API key not set');
+  // Allow header OR query param for convenience
+  const keyFromHeader = req.headers['x-api-key'];
+  const keyFromQuery  = req.query.key;
+  if (keyFromHeader === API_KEY || keyFromQuery === API_KEY) return next();
+  return res.status(401).send('Unauthorized');
+}
+
+app.get('/files', requireApiKey, (req, res) => {
   const files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.csv'));
-
-  let links = files.map(file => {
-    return `<li><a href="/files/${encodeURIComponent(file)}">${file}</a></li>`;
-  }).join('');
-
+  const links = files.map(file => `<li><a href="/files/${encodeURIComponent(file)}?key=${encodeURIComponent(API_KEY)}">${file}</a></li>`).join('');
   res.send(`
     <html>
       <head><title>Available Files</title></head>
@@ -79,7 +86,7 @@ app.get('/files', (req, res) => {
   `);
 });
 
-app.get('/files/:name', (req, res) => {
+app.get('/files/:name', requireApiKey, (req, res) => {
   const filePath = path.join(DATA_DIR, req.params.name);
   if (!fs.existsSync(filePath)) return res.status(404).send('Not found');
   res.download(filePath);
